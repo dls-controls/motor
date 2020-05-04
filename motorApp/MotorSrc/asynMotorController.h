@@ -1,5 +1,5 @@
-/* asynMotorController.h 
- * 
+/* asynMotorController.h
+ *
  * Mark Rivers
  *
  * This file defines the base class for an asynMotorController.  It is the class
@@ -14,8 +14,8 @@
 #define MAX_CONTROLLER_STRING_SIZE 256
 #define DEFAULT_CONTROLLER_TIMEOUT 2.0
 
-/** Strings defining parameters for the driver. 
-  * These are the values passed to drvUserCreate. 
+/** Strings defining parameters for the driver.
+  * These are the values passed to drvUserCreate.
   * The driver will place in pasynUser->reason an integer to be used when the
   * standard asyn interface methods are called. */
 #define motorMoveRelString              "MOTOR_MOVE_REL"
@@ -45,7 +45,7 @@
 #define motorPostMoveDelayString        "MOTOR_POST_MOVE_DELAY"
 #define motorStatusString               "MOTOR_STATUS"
 #define motorUpdateStatusString         "MOTOR_UPDATE_STATUS"
-#define motorStatusDirectionString      "MOTOR_STATUS_DIRECTION" 
+#define motorStatusDirectionString      "MOTOR_STATUS_DIRECTION"
 #define motorStatusDoneString           "MOTOR_STATUS_DONE"
 #define motorStatusHighLimitString      "MOTOR_STATUS_HIGH_LIMIT"
 #define motorStatusAtHomeString         "MOTOR_STATUS_AT_HOME"
@@ -159,7 +159,7 @@ class epicsShareClass asynMotorController : public asynPortDriver {
   asynMotorController(const char *portName, int numAxes, int numParams,
                       int interfaceMask, int interruptMask,
                       int asynFlags, int autoConnect, int priority, int stackSize);
-                      
+
   virtual ~asynMotorController();
 
   /* These are the methods that we override from asynPortDriver */
@@ -178,18 +178,18 @@ class epicsShareClass asynMotorController : public asynPortDriver {
   virtual asynStatus poll();
   virtual asynStatus setDeferredMoves(bool defer);
   void asynMotorPoller();  // This should be private but is called from C function
-  
+
   /* Functions to deal with moveToHome.*/
   virtual asynStatus startMoveToHomeThread();
   void asynMotorMoveToHome();
-  
+
   /* These are the functions for profile moves */
   virtual asynStatus initializeProfile(size_t maxPoints);
   virtual asynStatus buildProfile();
   virtual asynStatus executeProfile();
   virtual asynStatus abortProfile();
   virtual asynStatus readbackProfile();
-  
+
   virtual asynStatus setMovingPollPeriod(double movingPollPeriod);
   virtual asynStatus setIdlePollPeriod(double idlePollPeriod);
 
@@ -292,7 +292,7 @@ class epicsShareClass asynMotorController : public asynPortDriver {
   double idlePollPeriod_;       /**< The time between polls when no axes are moving */
   double movingPollPeriod_;     /**< The time between polls when any axis is moving */
   int    forcedFastPolls_;      /**< The number of forced fast polls when the poller wakes up */
- 
+
   size_t maxProfilePoints_;     /**< Maximum number of profile points */
   double *profileTimes_;        /**< Array of times per profile point */
 

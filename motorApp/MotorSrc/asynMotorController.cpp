@@ -1,5 +1,5 @@
 /* asynMotorController.cpp
- * 
+ *
  * Mark Rivers
  *
  * This file defines the base class for an asynMotorController.  It is the class
@@ -34,7 +34,7 @@ static void asynMotorMoveToHomeC(void *drvPvt);
 
 
 /** Creates a new asynMotorController object.
-  * All of the arguments are simply passed to the constructor for the asynPortDriver base class. 
+  * All of the arguments are simply passed to the constructor for the asynPortDriver base class.
   * After calling the base class constructor this method creates the motor parameters
   * defined in asynMotorDriver.h.
   */
@@ -167,7 +167,7 @@ void asynMotorController::report(FILE *fp, int level)
 
   for (axis=0; axis<numAxes_; axis++) {
     pAxis = getAxis(axis);
-    if (!pAxis) continue; 
+    if (!pAxis) continue;
     pAxis->report(fp, level);
   }
 
@@ -181,8 +181,8 @@ void asynMotorController::report(FILE *fp, int level)
   * Sets the value in the parameter library.
   * If the function is motorStop_ then it calls pAxis->stop().
   * If the function is motorUpdateStatus_ then it does a poll and forces a callback.
-  * Calls any registered callbacks for this pasynUser->reason and address.  
-  * Motor drivers will reimplement this function if they support 
+  * Calls any registered callbacks for this pasynUser->reason and address.
+  * Motor drivers will reimplement this function if they support
   * controller-specific parameters on the asynInt32 interface. They should call this
   * base class method for any parameters that are not controller-specific.
   * \param[in] pasynUser asynUser structure that encodes the reason and address.
@@ -206,10 +206,10 @@ asynStatus asynMotorController::writeInt32(asynUser *pasynUser, epicsInt32 value
     double accel;
     getDoubleParam(axis, motorAccel_, &accel);
     status = pAxis->stop(accel);
-  
+
   } else if (function == motorDeferMoves_) {
     status = setDeferredMoves(value);
-  
+
   } else if (function == motorClosedLoop_) {
     status = pAxis->setClosedLoop(value);
 
@@ -234,7 +234,7 @@ asynStatus asynMotorController::writeInt32(asynUser *pasynUser, epicsInt32 value
 
   } else if (function == motorMoveToHome_) {
     if (value == 1) {
-      asynPrint(pasynUser, ASYN_TRACE_FLOW, 
+      asynPrint(pasynUser, ASYN_TRACE_FLOW,
         "%s:%s:: Starting a move to home for axis %d\n",  driverName, functionName, axis);
       moveToHomeAxis_ = axis;
       epicsEventSignal(moveToHomeId_);
@@ -243,24 +243,24 @@ asynStatus asynMotorController::writeInt32(asynUser *pasynUser, epicsInt32 value
 
   /* Do callbacks so higher layers see any changes */
   pAxis->callParamCallbacks();
-  if (status) 
-    asynPrint(pasynUser, ASYN_TRACE_ERROR, 
-      "%s:%s error, status=%d axis=%d, function=%d, value=%d\n", 
+  if (status)
+    asynPrint(pasynUser, ASYN_TRACE_ERROR,
+      "%s:%s error, status=%d axis=%d, function=%d, value=%d\n",
       driverName, functionName, status, axis, function, value);
-  else    
-    asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-      "%s:%s:: axis=%d, function=%d, value=%d\n", 
+  else
+    asynPrint(pasynUser, ASYN_TRACEIO_DRIVER,
+      "%s:%s:: axis=%d, function=%d, value=%d\n",
       driverName, functionName, axis, function, value);
   return status;
-}    
-  
+}
+
 /** Called when asyn clients call pasynFloat64->write().
   * Extracts the function and axis number from pasynUser.
   * Sets the value in the parameter library.
   * If the function is motorMoveRel_, motorMoveAbs_, motorMoveVel_, motorHome_, or motorPosition_,
   * then it calls pAxis->move(), pAxis->moveVelocity(), pAxis->home(), or pAxis->setPosition().
-  * Calls any registered callbacks for this pasynUser->reason and address.  
-  * Motor drivers will reimplement this function if they support 
+  * Calls any registered callbacks for this pasynUser->reason and address.
+  * Motor drivers will reimplement this function if they support
   * controller-specific parameters on the asynFloat64 interface.  They should call this
   * base class method for any parameters that are not controller-specific.
   * \param[in] pasynUser asynUser structure that encodes the reason and address.
@@ -300,10 +300,10 @@ asynStatus asynMotorController::writeFloat64(asynUser *pasynUser, epicsFloat64 v
     pAxis->setIntegerParam(motorStatusDone_, 0);
     pAxis->callParamCallbacks();
     wakeupPoller();
-    asynPrint(pasynUser, ASYN_TRACE_FLOW, 
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
       "%s:%s: Set driver %s, axis %d move relative by %f, base velocity=%f, velocity=%f, acceleration=%f\n",
       driverName, functionName, portName, pAxis->axisNo_, value, baseVelocity, velocity, acceleration );
-  
+
   } else if (function == motorMoveAbs_) {
     if (autoPower == 1) {
       status = pAxis->setClosedLoop(true);
@@ -317,7 +317,7 @@ asynStatus asynMotorController::writeFloat64(asynUser *pasynUser, epicsFloat64 v
     pAxis->setIntegerParam(motorStatusDone_, 0);
     pAxis->callParamCallbacks();
     wakeupPoller();
-    asynPrint(pasynUser, ASYN_TRACE_FLOW, 
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
       "%s:%s: Set driver %s, axis %d move absolute to %f, base velocity=%f, velocity=%f, acceleration=%f\n",
       driverName, functionName, portName, pAxis->axisNo_, value, baseVelocity, velocity, acceleration );
 
@@ -333,11 +333,11 @@ asynStatus asynMotorController::writeFloat64(asynUser *pasynUser, epicsFloat64 v
     pAxis->setIntegerParam(motorStatusDone_, 0);
     pAxis->callParamCallbacks();
     wakeupPoller();
-    asynPrint(pasynUser, ASYN_TRACE_FLOW, 
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
       "%s:%s: Set port %s, axis %d move with velocity of %f, acceleration=%f\n",
       driverName, functionName, portName, pAxis->axisNo_, value, acceleration);
 
-  // Note, the motorHome command happens on the asynFloat64 interface, even though the value (direction) is really integer 
+  // Note, the motorHome command happens on the asynFloat64 interface, even though the value (direction) is really integer
   } else if (function == motorHome_) {
     if (autoPower == 1) {
       status = pAxis->setClosedLoop(true);
@@ -352,80 +352,80 @@ asynStatus asynMotorController::writeFloat64(asynUser *pasynUser, epicsFloat64 v
     pAxis->setIntegerParam(motorStatusDone_, 0);
     pAxis->callParamCallbacks();
     wakeupPoller();
-    asynPrint(pasynUser, ASYN_TRACE_FLOW, 
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
       "%s:%s: Set driver %s, axis %d to home %s, base velocity=%f, velocity=%f, acceleration=%f\n",
       driverName, functionName, portName, pAxis->axisNo_, (forwards?"FORWARDS":"REVERSE"), baseVelocity, velocity, acceleration);
 
   } else if (function == motorPosition_) {
     status = pAxis->setPosition(value);
     pAxis->callParamCallbacks();
-    asynPrint(pasynUser, ASYN_TRACE_FLOW, 
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
       "%s:%s: Set driver %s, axis %d to position=%f\n",
       driverName, functionName, portName, pAxis->axisNo_, value);
 
   } else if (function == motorEncoderPosition_) {
     status = pAxis->setEncoderPosition(value);
     pAxis->callParamCallbacks();
-    asynPrint(pasynUser, ASYN_TRACE_FLOW, 
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
       "%s:%s: Set driver %s, axis %d to encoder position=%f\n",
       driverName, functionName, portName, pAxis->axisNo_, value);
 
   } else if (function == motorHighLimit_) {
     status = pAxis->setHighLimit(value);
     pAxis->callParamCallbacks();
-    asynPrint(pasynUser, ASYN_TRACE_FLOW, 
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
       "%s:%s: Set driver %s, axis %d high limit=%f\n",
       driverName, functionName, portName, pAxis->axisNo_, value);
 
   } else if (function == motorLowLimit_) {
     status = pAxis->setLowLimit(value);
     pAxis->callParamCallbacks();
-    asynPrint(pasynUser, ASYN_TRACE_FLOW, 
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
       "%s:%s: Set driver %s, axis %d low limit=%f\n",
       driverName, functionName, portName, pAxis->axisNo_, value);
 
   } else if (function == motorPGain_) {
     status = pAxis->setPGain(value);
     pAxis->callParamCallbacks();
-    asynPrint(pasynUser, ASYN_TRACE_FLOW, 
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
       "%s:%s: Set driver %s, axis %d proportional gain=%f\n",
       driverName, functionName, portName, pAxis->axisNo_, value);
 
   } else if (function == motorIGain_) {
     status = pAxis->setIGain(value);
     pAxis->callParamCallbacks();
-    asynPrint(pasynUser, ASYN_TRACE_FLOW, 
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
       "%s:%s: Set driver %s, axis %d integral gain=%f\n",
       driverName, functionName, portName, pAxis->axisNo_, value);
 
   } else if (function == motorDGain_) {
     status = pAxis->setDGain(value);
     pAxis->callParamCallbacks();
-    asynPrint(pasynUser, ASYN_TRACE_FLOW, 
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
       "%s:%s: Set driver %s, axis %d derivative gain=%f\n",
       driverName, functionName, portName, pAxis->axisNo_, value);
 
   } else if (function == motorEncoderRatio_) {
     status = pAxis->setEncoderRatio(value);
     pAxis->callParamCallbacks();
-    asynPrint(pasynUser, ASYN_TRACE_FLOW, 
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
       "%s:%s: Set driver %s, axis %d encoder ratio=%f\n",
       driverName, functionName, portName, pAxis->axisNo_, value);
 
   }
   /* Do callbacks so higher layers see any changes */
   pAxis->callParamCallbacks();
-  
-  if (status) 
-    asynPrint(pasynUser, ASYN_TRACE_ERROR, 
-      "%s:%s error, status=%d axis=%d, function=%d, value=%f\n", 
+
+  if (status)
+    asynPrint(pasynUser, ASYN_TRACE_ERROR,
+      "%s:%s error, status=%d axis=%d, function=%d, value=%f\n",
       driverName, functionName, status, axis, function, value);
-  else    
-    asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-      "%s:%s:: axis=%d, function=%d, value=%f\n", 
+  else
+    asynPrint(pasynUser, ASYN_TRACEIO_DRIVER,
+      "%s:%s:: axis=%d, function=%d, value=%f\n",
       driverName, functionName, axis, function, value);
   return status;
-    
+
 }
 
 /** Called when asyn clients call pasynFloat64Array->write().
@@ -441,18 +441,18 @@ asynStatus asynMotorController::writeFloat64Array(asynUser *pasynUser, epicsFloa
 
   pAxis = getAxis(pasynUser);
   if (!pAxis) return asynError;
-  
+
   if (nElements > maxProfilePoints_) nElements = maxProfilePoints_;
-   
+
   if (function == profileTimeArray_) {
     memcpy(profileTimes_, value, nElements*sizeof(double));
-  } 
+  }
   else if (function == profilePositions_) {
     pAxis->defineProfile(value, nElements);
-  } 
+  }
   else {
     asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-      "%s:%s: unknown parameter number %d\n", 
+      "%s:%s: unknown parameter number %d\n",
       driverName, functionName, function);
     return asynError ;
   }
@@ -463,7 +463,7 @@ asynStatus asynMotorController::writeFloat64Array(asynUser *pasynUser, epicsFloa
   * Returns the readbacks or following error arrays from profile moves.
   * \param[in] pasynUser pasynUser structure that encodes the reason and address.
   * \param[in] value Pointer to the array to read.
-  * \param[in] nElements Maximum number of elements to read. 
+  * \param[in] nElements Maximum number of elements to read.
   * \param[in] nRead Number of values actually returned */
 asynStatus asynMotorController::readFloat64Array(asynUser *pasynUser, epicsFloat64 *value,
                                                  size_t nElements, size_t *nRead)
@@ -475,20 +475,20 @@ asynStatus asynMotorController::readFloat64Array(asynUser *pasynUser, epicsFloat
 
   pAxis = getAxis(pasynUser);
   if (!pAxis) return asynError;
-  
+
   getIntegerParam(profileNumReadbacks_, &numReadbacks);
   *nRead = numReadbacks;
   if (*nRead > nElements) *nRead = nElements;
 
   if (function == profileReadbacks_) {
     memcpy(value, pAxis->profileReadbacks_, *nRead*sizeof(double));
-  } 
+  }
   else if (function == profileFollowingErrors_) {
     memcpy(value, pAxis->profileFollowingErrors_, *nRead*sizeof(double));
-  } 
+  }
   else {
     asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-      "%s:%s: unknown parameter number %d\n", 
+      "%s:%s: unknown parameter number %d\n",
       driverName, functionName, function);
     return asynError ;
   }
@@ -498,7 +498,7 @@ asynStatus asynMotorController::readFloat64Array(asynUser *pasynUser, epicsFloat
 
 /** Called when asyn clients call pasynGenericPointer->read().
   * Builds an aggregate MotorStatus structure at the memory location of the
-  * input pointer.  
+  * input pointer.
   * \param[in] pasynUser asynUser structure that encodes the reason and address.
   * \param[in] pointer Pointer to the MotorStatus object to return. */
 asynStatus asynMotorController::readGenericPointer(asynUser *pasynUser, void *pointer)
@@ -511,17 +511,17 @@ asynStatus asynMotorController::readGenericPointer(asynUser *pasynUser, void *po
   pAxis = getAxis(pasynUser);
   if (!pAxis) return asynError;
   axis = pAxis->axisNo_;
- 
+
   getAddress(pasynUser, &axis);
   getIntegerParam(axis, motorStatus_, (int *)&pStatus->status);
   getDoubleParam(axis, motorPosition_, &pStatus->position);
   getDoubleParam(axis, motorEncoderPosition_, &pStatus->encoderPosition);
   getDoubleParam(axis, motorVelocity_, &pStatus->velocity);
   asynPrint(pasynUser, ASYN_TRACE_FLOW,
-    "%s:%s: MotorStatus = status%d, position=%f, encoder position=%f, velocity=%f\n", 
+    "%s:%s: MotorStatus = status%d, position=%f, encoder position=%f, velocity=%f\n",
     driverName, functionName, pStatus->status, pStatus->position, pStatus->encoderPosition, pStatus->velocity);
   return asynSuccess;
-}  
+}
 
 /** Returns a pointer to an asynMotorAxis object.
   * Returns NULL if the axis number encoded in pasynUser is invalid.
@@ -531,7 +531,7 @@ asynStatus asynMotorController::readGenericPointer(asynUser *pasynUser, void *po
 asynMotorAxis* asynMotorController::getAxis(asynUser *pasynUser)
 {
     int axisNo;
-    
+
     getAddress(pasynUser, &axisNo);
     return getAxis(axisNo);
 }
@@ -560,7 +560,7 @@ asynMotorAxis* asynMotorController::getAxis(int axisNo)
   * but are free to reimplement it if necessary.
   * \param[in] movingPollPeriod The time between polls when any axis is moving.
   * \param[in] idlePollPeriod The time between polls when no axis is moving.
-  * \param[in] forcedFastPolls The number of times to force the movingPollPeriod after waking up the poller.  
+  * \param[in] forcedFastPolls The number of times to force the movingPollPeriod after waking up the poller.
   * This can need to be non-zero for controllers that do not immediately
   * report that an axis is moving after it has been told to start. */
 asynStatus asynMotorController::startPoller(double movingPollPeriod, double idlePollPeriod, int forcedFastPolls)
@@ -568,7 +568,7 @@ asynStatus asynMotorController::startPoller(double movingPollPeriod, double idle
   movingPollPeriod_ = movingPollPeriod;
   idlePollPeriod_   = idlePollPeriod;
   forcedFastPolls_  = forcedFastPolls;
-  epicsThreadCreate("motorPoller", 
+  epicsThreadCreate("motorPoller",
                     epicsThreadPriorityLow,
                     epicsThreadGetStackSize(epicsThreadStackMedium),
                     (EPICSTHREADFUNC)asynMotorPollerC, (void *)this);
@@ -591,7 +591,7 @@ asynStatus asynMotorController::wakeupPoller()
   * This base class implementation does nothing.  Derived classes can implement this method if there
   * are controller-wide parameters that need to be polled.  It can also be used for efficiency in some
   * cases. For example some controllers can return the status or positions for all axes in a single
-  * command.  In that case asynMotorController::poll() could read that information, and then 
+  * command.  In that case asynMotorController::poll() could read that information, and then
   * asynMotorAxis::poll() might just extract the axis-specific information from the result. */
 asynStatus asynMotorController::poll()
 {
@@ -603,9 +603,9 @@ static void asynMotorPollerC(void *drvPvt)
   asynMotorController *pController = (asynMotorController*)drvPvt;
   pController->asynMotorPoller();
 }
-  
+
 /** Default poller function that runs in the thread created by asynMotorController::startPoller().
-  * This base class implementation can be used by most derived classes. 
+  * This base class implementation can be used by most derived classes.
   * It polls at the idlePollPeriod_ when no axes are moving, and at the movingPollPeriod_ when
   * any axis is moving.  It will immediately do a poll when asynMotorController::wakeupPoller() is
   * called, and will then do forcedFastPolls_ loops at the movingPollPeriod, before reverting back
@@ -650,10 +650,10 @@ void asynMotorController::asynMotorPoller()
     for (i=0; i<numAxes_; i++) {
       pAxis=getAxis(i);
       if (!pAxis) continue;
-      
+
       getIntegerParam(i, motorPowerAutoOnOff_, &autoPower);
       getDoubleParam(i, motorPowerOffDelay_, &autoPowerOffDelay);
-      
+
       pAxis->poll(&moving);
       if (moving) {
 	anyMoving = true;
@@ -701,7 +701,7 @@ void asynMotorController::asynMotorPoller()
  */
 asynStatus asynMotorController::startMoveToHomeThread()
 {
-  epicsThreadCreate("motorMoveToHome", 
+  epicsThreadCreate("motorMoveToHome",
                     epicsThreadPriorityMedium,
                     epicsThreadGetStackSize(epicsThreadStackMedium),
                     (EPICSTHREADFUNC)asynMotorMoveToHomeC, (void *)this);
@@ -721,29 +721,29 @@ static void asynMotorMoveToHomeC(void *drvPvt)
  */
 void asynMotorController::asynMotorMoveToHome()
 {
-  
+
   asynMotorAxis *pAxis;
   int status = 0;
   static const char *functionName = "asynMotorMoveToHome";
 
   while(1) {
     status = epicsEventWait(moveToHomeId_);
-    if (status == epicsEventWaitOK) { 
+    if (status == epicsEventWaitOK) {
       pAxis = getAxis(this->moveToHomeAxis_);
       if (!pAxis) continue;
       status = pAxis->doMoveToHome();
       if (status) {
       asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-        "%s:%s: move to home failed in asynMotorController::asynMotorMoveToHome. Axis number=%d\n", 
+        "%s:%s: move to home failed in asynMotorController::asynMotorMoveToHome. Axis number=%d\n",
         driverName, functionName, this->moveToHomeAxis_);
       }
-    } 
-  } 
+    }
+  }
 }
 
 
 /** Writes a string to the controller.
-  * Calls writeController() with a default location of the string to write and a default timeout. */ 
+  * Calls writeController() with a default location of the string to write and a default timeout. */
 asynStatus asynMotorController::writeController()
 {
   return writeController(outString_, DEFAULT_CONTROLLER_TIMEOUT);
@@ -757,16 +757,16 @@ asynStatus asynMotorController::writeController(const char *output, double timeo
   size_t nwrite;
   asynStatus status;
   // const char *functionName="writeController";
-  
+
   status = pasynOctetSyncIO->write(pasynUserController_, output,
                                    strlen(output), timeout, &nwrite);
-                                  
+
   return status ;
 }
 
 /** Writes a string to the controller and reads the response.
   * Calls writeReadController() with default locations of the input and output strings
-  * and default timeout. */ 
+  * and default timeout. */
 asynStatus asynMotorController::writeReadController()
 {
   size_t nread;
@@ -779,18 +779,18 @@ asynStatus asynMotorController::writeReadController()
   * \param[in] maxChars Size of the input buffer.
   * \param[out] nread Number of characters read.
   * \param[out] timeout Timeout before returning an error.*/
-asynStatus asynMotorController::writeReadController(const char *output, char *input, 
+asynStatus asynMotorController::writeReadController(const char *output, char *input,
                                                     size_t maxChars, size_t *nread, double timeout)
 {
   size_t nwrite;
   asynStatus status;
   int eomReason;
   // const char *functionName="writeReadController";
-  
+
   status = pasynOctetSyncIO->writeRead(pasynUserController_, output,
                                        strlen(output), input, maxChars, timeout,
                                        &nwrite, nread, &eomReason);
-                        
+
   return status;
 }
 
@@ -803,7 +803,7 @@ asynStatus asynMotorController::initializeProfile(size_t maxProfilePoints)
   int axis;
   asynMotorAxis *pAxis;
   // static const char *functionName = "initializeProfile";
-  
+
   maxProfilePoints_ = maxProfilePoints;
   if (profileTimes_) free(profileTimes_);
   profileTimes_ = (double *)calloc(maxProfilePoints, sizeof(double));
@@ -814,7 +814,7 @@ asynStatus asynMotorController::initializeProfile(size_t maxProfilePoints)
   }
   return asynSuccess;
 }
-  
+
 /** Build a profile move of multiple axes. */
 asynStatus asynMotorController::buildProfile()
 {
@@ -850,7 +850,7 @@ asynStatus asynMotorController::executeProfile()
   // static const char *functionName = "executeProfile";
   int axis;
   asynMotorAxis *pAxis;
-  
+
   for (axis=0; axis<numAxes_; axis++) {
     pAxis = getAxis(axis);
     if (!pAxis) continue;
@@ -865,7 +865,7 @@ asynStatus asynMotorController::abortProfile()
   // static const char *functionName = "abortProfile";
   int axis;
   asynMotorAxis *pAxis;
-  
+
   for (axis=0; axis<numAxes_; axis++) {
     pAxis = getAxis(axis);
     if (!pAxis) continue;
@@ -880,7 +880,7 @@ asynStatus asynMotorController::readbackProfile()
   // static const char *functionName = "readbackProfile";
   int axis;
   asynMotorAxis *pAxis;
-  
+
   for (axis=0; axis<numAxes_; axis++) {
     pAxis = getAxis(axis);
     if (!pAxis) continue;
@@ -895,7 +895,7 @@ asynStatus asynMotorController::setMovingPollPeriod(double movingPollPeriod)
   static const char *functionName = "setMovingPollPeriod";
 
   asynPrint(pasynUserSelf, ASYN_TRACE_FLOW,
-    "%s:%s: Setting moving poll period to %f\n", 
+    "%s:%s: Setting moving poll period to %f\n",
     driverName, functionName, movingPollPeriod);
 
   lock();
@@ -911,7 +911,7 @@ asynStatus asynMotorController::setIdlePollPeriod(double idlePollPeriod)
   static const char *functionName = "setIdlePollPeriod";
 
   asynPrint(pasynUserSelf, ASYN_TRACE_FLOW,
-    "%s:%s: Setting idle poll period to %f\n", 
+    "%s:%s: Setting idle poll period to %f\n",
     driverName, functionName, idlePollPeriod);
 
   lock();
@@ -935,7 +935,7 @@ asynStatus setMovingPollPeriod(const char *portName, double movingPollPeriod)
     printf("%s:%s: Error port %s not found\n", driverName, functionName, portName);
     return asynError;
   }
-    
+
   return pC->setMovingPollPeriod(movingPollPeriod);
 }
 
@@ -949,7 +949,7 @@ asynStatus setIdlePollPeriod(const char *portName, double idlePollPeriod)
     printf("%s:%s: Error port %s not found\n", driverName, functionName, portName);
     return asynError;
   }
-    
+
   return pC->setIdlePollPeriod(idlePollPeriod);
 }
 
@@ -966,7 +966,7 @@ asynStatus asynMotorEnableMoveToHome(const char *portName, int axis, int distanc
     printf("%s:%s: Error port %s not found\n", driverName, functionName, portName);
     return asynError;
   }
-  
+
   pA = pC->getAxis(axis);
   if (!pA) {
     printf("%s:%s: Error axis %d not found\n", driverName, functionName, axis);;

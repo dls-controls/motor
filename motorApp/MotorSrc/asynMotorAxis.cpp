@@ -1,5 +1,5 @@
-/* asynMotorAxis.cpp 
- * 
+/* asynMotorAxis.cpp
+ *
  * Mark Rivers
  *
  * This file defines the base class for an asynMotorAxis.  It is the class
@@ -20,9 +20,9 @@ static const char *driverName = "asynMotorAxis";
 
 
 /** Creates a new asynMotorAxis object.
-  * \param[in] pC Pointer to the asynMotorController to which this axis belongs. 
+  * \param[in] pC Pointer to the asynMotorController to which this axis belongs.
   * \param[in] axisNo Index number of this axis, range 0 to pC->numAxes_-1.
-  * 
+  *
   * Checks that pC is not null, and that axisNo is in the valid range.
   * Sets a pointer to itself in pC->pAxes[axisNo_].
   * Connects pasynUser_ to this asyn port and axisNo.
@@ -47,7 +47,7 @@ asynMotorAxis::asynMotorAxis(class asynMotorController *pC, int axisNo)
   profilePositions_       = NULL;
   profileReadbacks_       = NULL;
   profileFollowingErrors_ = NULL;
-  
+
   /* Used to keep track of referencing mode in the driver.*/
   referencingMode_ = 0;
   /* Used to enable/disable move to home, and to tell driver how far to move.*/
@@ -60,7 +60,7 @@ asynMotorAxis::asynMotorAxis(class asynMotorController *pC, int axisNo)
   // Create the asynUser, connect to this axis
   pasynUser_ = pasynManager->createAsynUser(NULL, NULL);
   pasynManager->connectDevice(pasynUser_, pC->portName, axisNo);
-  
+
   // Initialize some parameters
   setIntegerParam(pC_->motorPowerAutoOnOff_, 0);
   setDoubleParam(pC_->motorPowerOffDelay_, 0.);
@@ -72,7 +72,7 @@ asynMotorAxis::~asynMotorAxis()
 }
 
 /** Move the motor to an absolute location or by a relative amount.
-  * \param[in] position  The absolute position to move to (if relative=0) or the relative distance to move 
+  * \param[in] position  The absolute position to move to (if relative=0) or the relative distance to move
   * by (if relative=1). Units=steps.
   * \param[in] relative  Flag indicating relative move (1) or absolute move (0).
   * \param[in] minVelocity The initial velocity, often called the base velocity. Units=steps/sec.
@@ -181,7 +181,7 @@ asynStatus asynMotorAxis::setDGain(double dGain)
 }
 
 
-/** Set the motor closed loop status. 
+/** Set the motor closed loop status.
   * \param[in] closedLoop true = close loop, false = open looop. */
 asynStatus asynMotorAxis::setClosedLoop(bool closedLoop)
 {
@@ -189,7 +189,7 @@ asynStatus asynMotorAxis::setClosedLoop(bool closedLoop)
 }
 
 
-/** Set the motor encoder ratio. 
+/** Set the motor encoder ratio.
   * \param[in] ratio The new encoder ratio */
 asynStatus asynMotorAxis::setEncoderRatio(double ratio)
 {
@@ -202,15 +202,15 @@ void asynMotorAxis::report(FILE *fp, int details)
 
 
 /**
- * Default implementation of doMoveToHome. 
- * Derived classes need to implement this to actually perform the 
+ * Default implementation of doMoveToHome.
+ * Derived classes need to implement this to actually perform the
  * axis move to the home position.
  */
 asynStatus asynMotorAxis::doMoveToHome()
 {
   static const char *functionName="doMoveToHome";
-  
-  asynPrint(pasynUser_, ASYN_TRACE_ERROR, 
+
+  asynPrint(pasynUser_, ASYN_TRACE_ERROR,
     "%s:%s: Axis=%d no implementation\n",
     driverName, functionName, pC_->moveToHomeAxis_);
   return asynSuccess;
@@ -222,14 +222,14 @@ asynStatus asynMotorAxis::doMoveToHome()
  */
 void  asynMotorAxis::setReferencingModeMove(int distance)
 {
-  referencingModeMove_ = distance; 
+  referencingModeMove_ = distance;
 }
 
 
 /**
  * Get method for referencingModeMove_
  */
-int  asynMotorAxis::getReferencingModeMove() 
+int  asynMotorAxis::getReferencingModeMove()
 {
   return referencingModeMove_;
 }
@@ -237,7 +237,7 @@ int  asynMotorAxis::getReferencingModeMove()
 
 
 
-// We implement the setIntegerParam, setDoubleParam, and callParamCallbacks methods so we can construct 
+// We implement the setIntegerParam, setDoubleParam, and callParamCallbacks methods so we can construct
 // the aggregate status structure and do callbacks on it
 
 /** Sets the value for an integer for this axis in the parameter library.
@@ -245,14 +245,14 @@ int  asynMotorAxis::getReferencingModeMove()
   * (motorStatusDirection_, motorStatusHomed_, etc.).  In that case it sets or clears the appropriate
   * bit in its private MotorStatus.status structure and if that status has changed sets a flag to
   * do callbacks to devMotorAsyn when callParamCallbacks() is called.
-  * \param[in] function The function (parameter) number 
+  * \param[in] function The function (parameter) number
   * \param[in] value Value to set */
 asynStatus asynMotorAxis::setIntegerParam(int function, int value)
 {
   int mask;
   epicsUInt32 status=0;
   // This assumes the parameters defined above are in the same order as the bits the motor record expects!
-  if (function >= pC_->motorStatusDirection_ && 
+  if (function >= pC_->motorStatusDirection_ &&
       function <= pC_->motorStatusHomed_) {
     status = status_.status;
     mask = 1 << (function - pC_->motorStatusDirection_);
@@ -271,10 +271,10 @@ asynStatus asynMotorAxis::setIntegerParam(int function, int value)
 
 
 /** Sets the value for a double for this axis in the parameter library.
-  * This function takes special action if the parameter is motorPosition_ or motorEncoderPosition_.  
+  * This function takes special action if the parameter is motorPosition_ or motorEncoderPosition_.
   * In that case it sets the value in the private MotorStatus structure and if the value has changed
   * then sets a flag to do callbacks to devMotorAsyn when callParamCallbacks() is called.
-  * \param[in] function The function (parameter) number 
+  * \param[in] function The function (parameter) number
   * \param[in] value Value to set */
 asynStatus asynMotorAxis::setDoubleParam(int function, double value)
 {
@@ -288,14 +288,14 @@ asynStatus asynMotorAxis::setDoubleParam(int function, double value)
         statusChanged_ = 1;
         status_.encoderPosition = value;
     }
-  }  
+  }
   // Call the base class method
   return pC_->setDoubleParam(axisNo_, function, value);
-}   
+}
 
 /**
   * Sets the value for a string for this axis in the parameter library.
-  * \param[in] function The function (parameter) number 
+  * \param[in] function The function (parameter) number
   * \param[in] value Value to set */
 asynStatus asynMotorAxis::setStringParam(int function, const char *value)
 {
@@ -307,7 +307,7 @@ asynStatus asynMotorAxis::setStringParam(int function, const char *value)
 
 /** Calls the callbacks for any parameters that have changed for this axis in the parameter library.
   * This function takes special action if the aggregate MotorStatus structure has changed.
-  * In that case it does callbacks on the asynGenericPointer interface, typically to devMotorAsyn. */  
+  * In that case it does callbacks on the asynGenericPointer interface, typically to devMotorAsyn. */
 asynStatus asynMotorAxis::callParamCallbacks()
 {
   if (statusChanged_) {
@@ -328,13 +328,13 @@ asynStatus asynMotorAxis::initializeProfile(size_t maxProfilePoints)
   profileFollowingErrors_ =   (double *)calloc(maxProfilePoints, sizeof(double));
   return asynSuccess;
 }
-  
 
 
-/** Function to define the motor positions for a profile move. 
+
+/** Function to define the motor positions for a profile move.
   * This base class function converts the positions from user units
   * to controller units, using the profileMotorOffset_, profileMotorDirection_,
-  * and profileMotorResolution_ parameters. 
+  * and profileMotorResolution_ parameters.
   * \param[in] positions Array of profile positions for this axis in user units.
   * \param[in] numPoints The number of positions in the array.
   */
@@ -347,7 +347,7 @@ asynStatus asynMotorAxis::defineProfile(double *positions, size_t numPoints)
   double scale;
   int status=0;
   static const char *functionName = "defineProfile";
-  
+
   asynPrint(pasynUser_, ASYN_TRACE_FLOW,
             "%s:%s: axis=%d, numPoints=%d, positions[0]=%f\n",
             driverName, functionName, axisNo_, (int)numPoints, positions[0]);
@@ -362,7 +362,7 @@ asynStatus asynMotorAxis::defineProfile(double *positions, size_t numPoints)
             driverName, functionName, axisNo_, status, offset, direction, resolution);
   if (status) return asynError;
   if (resolution == 0.0) return asynError;
-  
+
   // Convert to controller units
   scale = 1.0/resolution;
   if (direction != 0) scale = -scale;
@@ -408,7 +408,7 @@ asynStatus asynMotorAxis::abortProfile()
 
 
 /** Function to readback the actual motor positions from a coordinated move of multiple axes.
-  * This base class function converts the readbacks and following errors from controller units 
+  * This base class function converts the readbacks and following errors from controller units
   * to user units and does callbacks on the arrays.
   * Caution: this function modifies the readbacks in place, so it must only be called
   * once per readback operation.
@@ -428,7 +428,7 @@ asynStatus asynMotorAxis::readbackProfile()
   status |= pC_->getIntegerParam(axisNo_, pC_->motorRecDirection_, &direction);
   status |= pC_->getIntegerParam(0, pC_->profileNumReadbacks_, &numReadbacks);
   if (status) return asynError;
-  
+
   // Convert to user units
   if (direction != 0) resolution = -resolution;
   for (i=0; i<numReadbacks; i++) {
@@ -441,7 +441,7 @@ asynStatus asynMotorAxis::readbackProfile()
 }
 
 /****************************************************************************/
-/* The following functions are used by the automatic drive power control in the 
+/* The following functions are used by the automatic drive power control in the
    base class poller in the asynMotorController class.*/
 
 /**
@@ -453,7 +453,7 @@ int asynMotorAxis::getWasMovingFlag(void)
 }
 
 /**
- * Set this to 1 if the previous poll indicated moving state 
+ * Set this to 1 if the previous poll indicated moving state
  */
 void asynMotorAxis::setWasMovingFlag(int wasMovingFlag)
 {
