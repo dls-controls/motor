@@ -62,9 +62,9 @@ asynMotorAxis::asynMotorAxis(class asynMotorController *pC, int axisNo)
   pasynManager->connectDevice(pasynUser_, pC->portName, axisNo);
 
   // Initialize some parameters
-  setIntegerParam(pC_->motorPowerAutoOnOff_, 0);
-  setDoubleParam(pC_->motorPowerOffDelay_, 0.);
-  setDoubleParam(pC_->motorPowerOnDelay_, 0.);
+  setIntegerParam(pC_->paramSet->motorPowerAutoOnOff_, 0);
+  setDoubleParam(pC_->paramSet->motorPowerOffDelay_, 0.);
+  setDoubleParam(pC_->paramSet->motorPowerOnDelay_, 0.);
 }
 
 asynMotorAxis::~asynMotorAxis()
@@ -252,10 +252,10 @@ asynStatus asynMotorAxis::setIntegerParam(int function, int value)
   int mask;
   epicsUInt32 status=0;
   // This assumes the parameters defined above are in the same order as the bits the motor record expects!
-  if (function >= pC_->motorStatusDirection_ &&
-      function <= pC_->motorStatusHomed_) {
+  if (function >= pC_->paramSet->motorStatusDirection_ &&
+      function <= pC_->paramSet->motorStatusHomed_) {
     status = status_.status;
-    mask = 1 << (function - pC_->motorStatusDirection_);
+    mask = 1 << (function - pC_->paramSet->motorStatusDirection_);
     if (value) status |= mask;
     else       status &= ~mask;
     if (status != status_.status) {
@@ -264,7 +264,7 @@ asynStatus asynMotorAxis::setIntegerParam(int function, int value)
     }
   }
   // Call the base class method
-  pC_->setIntegerParam(axisNo_, pC_->motorStatus_, status);
+  pC_->setIntegerParam(axisNo_, pC_->paramSet->motorStatus_, status);
   return pC_->setIntegerParam(axisNo_, function, value);
 }
 
@@ -278,12 +278,12 @@ asynStatus asynMotorAxis::setIntegerParam(int function, int value)
   * \param[in] value Value to set */
 asynStatus asynMotorAxis::setDoubleParam(int function, double value)
 {
-  if (function == pC_->motorPosition_) {
+  if (function == pC_->paramSet->motorPosition_) {
     if (value != status_.position) {
         statusChanged_ = 1;
         status_.position = value;
     }
-  } else if (function == pC_->motorEncoderPosition_) {
+  } else if (function == pC_->paramSet->motorEncoderPosition_) {
     if (value != status_.encoderPosition) {
         statusChanged_ = 1;
         status_.encoderPosition = value;
@@ -312,7 +312,7 @@ asynStatus asynMotorAxis::callParamCallbacks()
 {
   if (statusChanged_) {
     statusChanged_ = 0;
-    pC_->doCallbacksGenericPointer((void *)&status_, pC_->motorStatus_, axisNo_);
+    pC_->doCallbacksGenericPointer((void *)&status_, pC_->paramSet->motorStatus_, axisNo_);
   }
   return pC_->callParamCallbacks(axisNo_);
 }
@@ -354,9 +354,9 @@ asynStatus asynMotorAxis::defineProfile(double *positions, size_t numPoints)
 
   if (numPoints > pC_->maxProfilePoints_) return asynError;
 
-  status |= pC_->getDoubleParam(axisNo_, pC_->motorRecResolution_, &resolution);
-  status |= pC_->getDoubleParam(axisNo_, pC_->motorRecOffset_, &offset);
-  status |= pC_->getIntegerParam(axisNo_, pC_->motorRecDirection_, &direction);
+  status |= pC_->getDoubleParam(axisNo_, pC_->paramSet->motorRecResolution_, &resolution);
+  status |= pC_->getDoubleParam(axisNo_, pC_->paramSet->motorRecOffset_, &offset);
+  status |= pC_->getIntegerParam(axisNo_, pC_->paramSet->motorRecDirection_, &direction);
   asynPrint(pasynUser_, ASYN_TRACE_FLOW,
             "%s:%s: axis=%d, status=%d, offset=%f direction=%d, resolution=%f\n",
             driverName, functionName, axisNo_, status, offset, direction, resolution);
@@ -423,10 +423,10 @@ asynStatus asynMotorAxis::readbackProfile()
   int status=0;
   //static const char *functionName = "readbackProfile";
 
-  status |= pC_->getDoubleParam(axisNo_, pC_->motorRecResolution_, &resolution);
-  status |= pC_->getDoubleParam(axisNo_, pC_->motorRecOffset_, &offset);
-  status |= pC_->getIntegerParam(axisNo_, pC_->motorRecDirection_, &direction);
-  status |= pC_->getIntegerParam(0, pC_->profileNumReadbacks_, &numReadbacks);
+  status |= pC_->getDoubleParam(axisNo_, pC_->paramSet->motorRecResolution_, &resolution);
+  status |= pC_->getDoubleParam(axisNo_, pC_->paramSet->motorRecOffset_, &offset);
+  status |= pC_->getIntegerParam(axisNo_, pC_->paramSet->motorRecDirection_, &direction);
+  status |= pC_->getIntegerParam(0, pC_->paramSet->profileNumReadbacks_, &numReadbacks);
   if (status) return asynError;
 
   // Convert to user units
@@ -435,8 +435,8 @@ asynStatus asynMotorAxis::readbackProfile()
     profileReadbacks_[i] = profileReadbacks_[i] * resolution + offset;
     profileFollowingErrors_[i] = profileFollowingErrors_[i] * resolution;
   }
-  status  = pC_->doCallbacksFloat64Array(profileReadbacks_,       numReadbacks, pC_->profileReadbacks_, axisNo_);
-  status |= pC_->doCallbacksFloat64Array(profileFollowingErrors_, numReadbacks, pC_->profileFollowingErrors_, axisNo_);
+  status  = pC_->doCallbacksFloat64Array(profileReadbacks_,       numReadbacks, pC_->paramSet->profileReadbacks_, axisNo_);
+  status |= pC_->doCallbacksFloat64Array(profileFollowingErrors_, numReadbacks, pC_->paramSet->profileFollowingErrors_, axisNo_);
   return asynSuccess;
 }
 

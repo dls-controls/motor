@@ -16,6 +16,7 @@ INC += motordrvComCode.h
 ifdef ASYN
 INC += motor_interface.h
 INC += paramLib.h
+INC += asynMotorControllerParamSet.h
 INC += asynMotorController.h
 INC += asynMotorAxis.h
 endif

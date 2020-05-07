@@ -38,103 +38,33 @@ static void asynMotorMoveToHomeC(void *drvPvt);
   * After calling the base class constructor this method creates the motor parameters
   * defined in asynMotorDriver.h.
   */
-asynMotorController::asynMotorController(const char *portName, int numAxes, int numParams,
-                                         int interfaceMask, int interruptMask,
-                                         int asynFlags, int autoConnect, int priority, int stackSize)
-
-  : asynPortDriver(portName, numAxes,
-#if MOTOR_ASYN_VERSION_INT < VERSION_INT_4_32
-                   NUM_MOTOR_DRIVER_PARAMS+numParams,
-#endif
-      interfaceMask | asynOctetMask | asynInt32Mask | asynFloat64Mask | asynFloat64ArrayMask | asynGenericPointerMask | asynDrvUserMask,
-      interruptMask | asynOctetMask | asynInt32Mask | asynFloat64Mask | asynFloat64ArrayMask | asynGenericPointerMask,
-      asynFlags, autoConnect, priority, stackSize),
-    shuttingDown_(0), numAxes_(numAxes)
+asynMotorController::asynMotorController(
+  asynMotorControllerParamSet* paramSet,
+  const char *portName,
+  int numAxes,
+  int interfaceMask,
+  int interruptMask,
+  int asynFlags,
+  int autoConnect,
+  int priority,
+  int stackSize
+) :
+  asynPortDriver(
+    paramSet,
+    portName,
+    numAxes,
+    interfaceMask | asynOctetMask | asynInt32Mask | asynFloat64Mask | asynFloat64ArrayMask | asynGenericPointerMask | asynDrvUserMask,
+    interruptMask | asynOctetMask | asynInt32Mask | asynFloat64Mask | asynFloat64ArrayMask | asynGenericPointerMask,
+    asynFlags,
+    autoConnect,
+    priority,
+    stackSize
+  ),
+  shuttingDown_(0),
+  paramSet(paramSet),
+  numAxes_(numAxes)
 {
   static const char *functionName = "asynMotorController";
-
-  /* Create the base set of motor parameters */
-  createParam(motorMoveRelString,                asynParamFloat64,    &motorMoveRel_);
-  createParam(motorMoveAbsString,                asynParamFloat64,    &motorMoveAbs_);
-  createParam(motorMoveVelString,                asynParamFloat64,    &motorMoveVel_);
-  createParam(motorHomeString,                   asynParamFloat64,    &motorHome_);
-  createParam(motorStopString,                   asynParamInt32,      &motorStop_);
-  createParam(motorVelocityString,               asynParamFloat64,    &motorVelocity_);
-  createParam(motorVelBaseString,                asynParamFloat64,    &motorVelBase_);
-  createParam(motorAccelString,                  asynParamFloat64,    &motorAccel_);
-  createParam(motorPositionString,               asynParamFloat64,    &motorPosition_);
-  createParam(motorEncoderPositionString,        asynParamFloat64,    &motorEncoderPosition_);
-  createParam(motorDeferMovesString,             asynParamInt32,      &motorDeferMoves_);
-  createParam(motorMoveToHomeString,             asynParamInt32,      &motorMoveToHome_);
-  createParam(motorResolutionString,             asynParamFloat64,    &motorResolution_);
-  createParam(motorEncoderRatioString,           asynParamFloat64,    &motorEncoderRatio_);
-  createParam(motorPGainString,                  asynParamFloat64,    &motorPGain_);
-  createParam(motorIGainString,                  asynParamFloat64,    &motorIGain_);
-  createParam(motorDGainString,                  asynParamFloat64,    &motorDGain_);
-  createParam(motorHighLimitString,              asynParamFloat64,    &motorHighLimit_);
-  createParam(motorLowLimitString,               asynParamFloat64,    &motorLowLimit_);
-  createParam(motorClosedLoopString,             asynParamInt32,      &motorClosedLoop_);
-  createParam(motorPowerAutoOnOffString,         asynParamInt32,      &motorPowerAutoOnOff_);
-  createParam(motorPowerOnDelayString,           asynParamFloat64,    &motorPowerOnDelay_);
-  createParam(motorPowerOffDelayString,          asynParamFloat64,    &motorPowerOffDelay_);
-  createParam(motorPowerOffFractionString,       asynParamInt32,      &motorPowerOffFraction_);
-  createParam(motorPostMoveDelayString,          asynParamFloat64,    &motorPostMoveDelay_);
-  createParam(motorStatusString,                 asynParamInt32,      &motorStatus_);
-  createParam(motorUpdateStatusString,           asynParamInt32,      &motorUpdateStatus_);
-  createParam(motorStatusDirectionString,        asynParamInt32,      &motorStatusDirection_);
-  createParam(motorStatusDoneString,             asynParamInt32,      &motorStatusDone_);
-  createParam(motorStatusHighLimitString,        asynParamInt32,      &motorStatusHighLimit_);
-  createParam(motorStatusAtHomeString,           asynParamInt32,      &motorStatusAtHome_);
-  createParam(motorStatusSlipString,             asynParamInt32,      &motorStatusSlip_);
-  createParam(motorStatusPowerOnString,          asynParamInt32,      &motorStatusPowerOn_);
-  createParam(motorStatusFollowingErrorString,   asynParamInt32,      &motorStatusFollowingError_);
-  createParam(motorStatusHomeString,             asynParamInt32,      &motorStatusHome_);
-  createParam(motorStatusHasEncoderString,       asynParamInt32,      &motorStatusHasEncoder_);
-  createParam(motorStatusProblemString,          asynParamInt32,      &motorStatusProblem_);
-  createParam(motorStatusMovingString,           asynParamInt32,      &motorStatusMoving_);
-  createParam(motorStatusGainSupportString,      asynParamInt32,      &motorStatusGainSupport_);
-  createParam(motorStatusCommsErrorString,       asynParamInt32,      &motorStatusCommsError_);
-  createParam(motorStatusLowLimitString,         asynParamInt32,      &motorStatusLowLimit_);
-  createParam(motorStatusHomedString,            asynParamInt32,      &motorStatusHomed_);
-
-  // These are per-axis parameters for passing additional motor record information to the driver
-  createParam(motorRecResolutionString,        asynParamFloat64,      &motorRecResolution_);
-  createParam(motorRecDirectionString,           asynParamInt32,      &motorRecDirection_);
-  createParam(motorRecOffsetString,            asynParamFloat64,      &motorRecOffset_);
-
-  // These are the per-controller parameters for profile moves
-  createParam(profileNumAxesString,              asynParamInt32,      &profileNumAxes_);
-  createParam(profileNumPointsString,            asynParamInt32,      &profileNumPoints_);
-  createParam(profileCurrentPointString,         asynParamInt32,      &profileCurrentPoint_);
-  createParam(profileNumPulsesString,            asynParamInt32,      &profileNumPulses_);
-  createParam(profileStartPulsesString,          asynParamInt32,      &profileStartPulses_);
-  createParam(profileEndPulsesString,            asynParamInt32,      &profileEndPulses_);
-  createParam(profileActualPulsesString,         asynParamInt32,      &profileActualPulses_);
-  createParam(profileNumReadbacksString,         asynParamInt32,      &profileNumReadbacks_);
-  createParam(profileTimeModeString,             asynParamInt32,      &profileTimeMode_);
-  createParam(profileFixedTimeString,          asynParamFloat64,      &profileFixedTime_);
-  createParam(profileTimeArrayString,     asynParamFloat64Array,      &profileTimeArray_);
-  createParam(profileAccelerationString,       asynParamFloat64,      &profileAcceleration_);
-  createParam(profileMoveModeString,             asynParamInt32,      &profileMoveMode_);
-  createParam(profileBuildString,                asynParamInt32,      &profileBuild_);
-  createParam(profileBuildStateString,           asynParamInt32,      &profileBuildState_);
-  createParam(profileBuildStatusString,          asynParamInt32,      &profileBuildStatus_);
-  createParam(profileBuildMessageString,         asynParamOctet,      &profileBuildMessage_);
-  createParam(profileExecuteString,              asynParamInt32,      &profileExecute_);
-  createParam(profileExecuteStateString,         asynParamInt32,      &profileExecuteState_);
-  createParam(profileExecuteStatusString,        asynParamInt32,      &profileExecuteStatus_);
-  createParam(profileExecuteMessageString,       asynParamOctet,      &profileExecuteMessage_);
-  createParam(profileAbortString,                asynParamInt32,      &profileAbort_);
-  createParam(profileReadbackString,             asynParamInt32,      &profileReadback_);
-  createParam(profileReadbackStateString,        asynParamInt32,      &profileReadbackState_);
-  createParam(profileReadbackStatusString,       asynParamInt32,      &profileReadbackStatus_);
-  createParam(profileReadbackMessageString,      asynParamOctet,      &profileReadbackMessage_);
-
-  // These are the per-axis parameters for profile moves
-  createParam(profileUseAxisString,              asynParamInt32,      &profileUseAxis_);
-  createParam(profilePositionsString,     asynParamFloat64Array,      &profilePositions_);
-  createParam(profileReadbacksString,     asynParamFloat64Array,      &profileReadbacks_);
-  createParam(profileFollowingErrorsString, asynParamFloat64Array,    &profileFollowingErrors_);
 
   pAxes_ = (asynMotorAxis**) calloc(numAxes, sizeof(asynMotorAxis*));
   pollEventId_ = epicsEventMustCreate(epicsEventEmpty);
@@ -142,7 +72,7 @@ asynMotorController::asynMotorController(const char *portName, int numAxes, int 
 
   maxProfilePoints_ = 0;
   profileTimes_ = NULL;
-  setIntegerParam(profileExecuteState_, PROFILE_EXECUTE_DONE);
+  setIntegerParam(paramSet->profileExecuteState_, PROFILE_EXECUTE_DONE);
 
   moveToHomeAxis_ = 0;
 
@@ -202,37 +132,37 @@ asynStatus asynMotorController::writeInt32(asynUser *pasynUser, epicsInt32 value
   /* Set the parameter and readback in the parameter library. */
   pAxis->setIntegerParam(function, value);
 
-  if (function == motorStop_) {
+  if (function == paramSet->motorStop_) {
     double accel;
-    getDoubleParam(axis, motorAccel_, &accel);
+    getDoubleParam(paramSet->motorAccel_, &accel);
     status = pAxis->stop(accel);
 
-  } else if (function == motorDeferMoves_) {
+  } else if (function == paramSet->motorDeferMoves_) {
     status = setDeferredMoves(value);
 
-  } else if (function == motorClosedLoop_) {
+  } else if (function == paramSet->motorClosedLoop_) {
     status = pAxis->setClosedLoop(value);
 
-  } else if (function == motorUpdateStatus_) {
+  } else if (function == paramSet->motorUpdateStatus_) {
     bool moving;
     /* Do a poll, and then force a callback */
     poll();
     status = pAxis->poll(&moving);
     pAxis->statusChanged_ = 1;
 
-  } else if (function == profileBuild_) {
+  } else if (function == paramSet->profileBuild_) {
     status = buildProfile();
 
-  } else if (function == profileExecute_) {
+  } else if (function == paramSet->profileExecute_) {
     status = executeProfile();
 
-  } else if (function == profileAbort_) {
+  } else if (function == paramSet->profileAbort_) {
     status = abortProfile();
 
-  } else if (function == profileReadback_) {
+  } else if (function == paramSet->profileReadback_) {
     status = readbackProfile();
 
-  } else if (function == motorMoveToHome_) {
+  } else if (function == paramSet->motorMoveToHome_) {
     if (value == 1) {
       asynPrint(pasynUser, ASYN_TRACE_FLOW,
         "%s:%s:: Starting a move to home for axis %d\n",  driverName, functionName, axis);
@@ -281,56 +211,56 @@ asynStatus asynMotorController::writeFloat64(asynUser *pasynUser, epicsFloat64 v
   if (!pAxis) return asynError;
   axis = pAxis->axisNo_;
 
-  getIntegerParam(axis, motorPowerAutoOnOff_, &autoPower);
-  getDoubleParam(axis, motorPowerOnDelay_, &autoPowerOnDelay);
+  getIntegerParam(paramSet->motorPowerAutoOnOff_, &autoPower);
+  getDoubleParam(paramSet->motorPowerOnDelay_, &autoPowerOnDelay);
 
   /* Set the parameter and readback in the parameter library. */
   status = pAxis->setDoubleParam(function, value);
 
-  if (function == motorMoveRel_) {
+  if (function == paramSet->motorMoveRel_) {
     if (autoPower == 1) {
       status = pAxis->setClosedLoop(true);
       pAxis->setWasMovingFlag(1);
       epicsThreadSleep(autoPowerOnDelay);
     }
-    getDoubleParam(axis, motorVelBase_, &baseVelocity);
-    getDoubleParam(axis, motorVelocity_, &velocity);
-    getDoubleParam(axis, motorAccel_, &acceleration);
+    getDoubleParam(paramSet->motorVelBase_, &baseVelocity);
+    getDoubleParam(paramSet->motorVelocity_, &velocity);
+    getDoubleParam(paramSet->motorAccel_, &acceleration);
     status = pAxis->move(value, 1, baseVelocity, velocity, acceleration);
-    pAxis->setIntegerParam(motorStatusDone_, 0);
+    pAxis->setIntegerParam(paramSet->motorStatusDone_, 0);
     pAxis->callParamCallbacks();
     wakeupPoller();
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
       "%s:%s: Set driver %s, axis %d move relative by %f, base velocity=%f, velocity=%f, acceleration=%f\n",
       driverName, functionName, portName, pAxis->axisNo_, value, baseVelocity, velocity, acceleration );
 
-  } else if (function == motorMoveAbs_) {
+  } else if (function == paramSet->motorMoveAbs_) {
     if (autoPower == 1) {
       status = pAxis->setClosedLoop(true);
       pAxis->setWasMovingFlag(1);
       epicsThreadSleep(autoPowerOnDelay);
     }
-    getDoubleParam(axis, motorVelBase_, &baseVelocity);
-    getDoubleParam(axis, motorVelocity_, &velocity);
-    getDoubleParam(axis, motorAccel_, &acceleration);
+    getDoubleParam(paramSet->motorVelBase_, &baseVelocity);
+    getDoubleParam(paramSet->motorVelocity_, &velocity);
+    getDoubleParam(paramSet->motorAccel_, &acceleration);
     status = pAxis->move(value, 0, baseVelocity, velocity, acceleration);
-    pAxis->setIntegerParam(motorStatusDone_, 0);
+    pAxis->setIntegerParam(paramSet->motorStatusDone_, 0);
     pAxis->callParamCallbacks();
     wakeupPoller();
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
       "%s:%s: Set driver %s, axis %d move absolute to %f, base velocity=%f, velocity=%f, acceleration=%f\n",
       driverName, functionName, portName, pAxis->axisNo_, value, baseVelocity, velocity, acceleration );
 
-  } else if (function == motorMoveVel_) {
+  } else if (function == paramSet->motorMoveVel_) {
     if (autoPower == 1) {
       status = pAxis->setClosedLoop(true);
       pAxis->setWasMovingFlag(1);
       epicsThreadSleep(autoPowerOnDelay);
     }
-    getDoubleParam(axis, motorVelBase_, &baseVelocity);
-    getDoubleParam(axis, motorAccel_, &acceleration);
+    getDoubleParam(paramSet->motorVelBase_, &baseVelocity);
+    getDoubleParam(paramSet->motorAccel_, &acceleration);
     status = pAxis->moveVelocity(baseVelocity, value, acceleration);
-    pAxis->setIntegerParam(motorStatusDone_, 0);
+    pAxis->setIntegerParam(paramSet->motorStatusDone_, 0);
     pAxis->callParamCallbacks();
     wakeupPoller();
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
@@ -338,74 +268,74 @@ asynStatus asynMotorController::writeFloat64(asynUser *pasynUser, epicsFloat64 v
       driverName, functionName, portName, pAxis->axisNo_, value, acceleration);
 
   // Note, the motorHome command happens on the asynFloat64 interface, even though the value (direction) is really integer
-  } else if (function == motorHome_) {
+  } else if (function == paramSet->motorHome_) {
     if (autoPower == 1) {
       status = pAxis->setClosedLoop(true);
       pAxis->setWasMovingFlag(1);
       epicsThreadSleep(autoPowerOnDelay);
     }
-    getDoubleParam(axis, motorVelBase_, &baseVelocity);
-    getDoubleParam(axis, motorVelocity_, &velocity);
-    getDoubleParam(axis, motorAccel_, &acceleration);
+    getDoubleParam(paramSet->motorVelBase_, &baseVelocity);
+    getDoubleParam(paramSet->motorVelocity_, &velocity);
+    getDoubleParam(paramSet->motorAccel_, &acceleration);
     forwards = (value == 0) ? 0 : 1;
     status = pAxis->home(baseVelocity, velocity, acceleration, forwards);
-    pAxis->setIntegerParam(motorStatusDone_, 0);
+    pAxis->setIntegerParam(paramSet->motorStatusDone_, 0);
     pAxis->callParamCallbacks();
     wakeupPoller();
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
       "%s:%s: Set driver %s, axis %d to home %s, base velocity=%f, velocity=%f, acceleration=%f\n",
       driverName, functionName, portName, pAxis->axisNo_, (forwards?"FORWARDS":"REVERSE"), baseVelocity, velocity, acceleration);
 
-  } else if (function == motorPosition_) {
+  } else if (function == paramSet->motorPosition_) {
     status = pAxis->setPosition(value);
     pAxis->callParamCallbacks();
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
       "%s:%s: Set driver %s, axis %d to position=%f\n",
       driverName, functionName, portName, pAxis->axisNo_, value);
 
-  } else if (function == motorEncoderPosition_) {
+  } else if (function == paramSet->motorEncoderPosition_) {
     status = pAxis->setEncoderPosition(value);
     pAxis->callParamCallbacks();
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
       "%s:%s: Set driver %s, axis %d to encoder position=%f\n",
       driverName, functionName, portName, pAxis->axisNo_, value);
 
-  } else if (function == motorHighLimit_) {
+  } else if (function == paramSet->motorHighLimit_) {
     status = pAxis->setHighLimit(value);
     pAxis->callParamCallbacks();
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
       "%s:%s: Set driver %s, axis %d high limit=%f\n",
       driverName, functionName, portName, pAxis->axisNo_, value);
 
-  } else if (function == motorLowLimit_) {
+  } else if (function == paramSet->motorLowLimit_) {
     status = pAxis->setLowLimit(value);
     pAxis->callParamCallbacks();
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
       "%s:%s: Set driver %s, axis %d low limit=%f\n",
       driverName, functionName, portName, pAxis->axisNo_, value);
 
-  } else if (function == motorPGain_) {
+  } else if (function == paramSet->motorPGain_) {
     status = pAxis->setPGain(value);
     pAxis->callParamCallbacks();
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
       "%s:%s: Set driver %s, axis %d proportional gain=%f\n",
       driverName, functionName, portName, pAxis->axisNo_, value);
 
-  } else if (function == motorIGain_) {
+  } else if (function == paramSet->motorIGain_) {
     status = pAxis->setIGain(value);
     pAxis->callParamCallbacks();
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
       "%s:%s: Set driver %s, axis %d integral gain=%f\n",
       driverName, functionName, portName, pAxis->axisNo_, value);
 
-  } else if (function == motorDGain_) {
+  } else if (function == paramSet->motorDGain_) {
     status = pAxis->setDGain(value);
     pAxis->callParamCallbacks();
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
       "%s:%s: Set driver %s, axis %d derivative gain=%f\n",
       driverName, functionName, portName, pAxis->axisNo_, value);
 
-  } else if (function == motorEncoderRatio_) {
+  } else if (function == paramSet->motorEncoderRatio_) {
     status = pAxis->setEncoderRatio(value);
     pAxis->callParamCallbacks();
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
@@ -444,10 +374,10 @@ asynStatus asynMotorController::writeFloat64Array(asynUser *pasynUser, epicsFloa
 
   if (nElements > maxProfilePoints_) nElements = maxProfilePoints_;
 
-  if (function == profileTimeArray_) {
+  if (function == paramSet->profileTimeArray_) {
     memcpy(profileTimes_, value, nElements*sizeof(double));
   }
-  else if (function == profilePositions_) {
+  else if (function == paramSet->profilePositions_) {
     pAxis->defineProfile(value, nElements);
   }
   else {
@@ -476,14 +406,14 @@ asynStatus asynMotorController::readFloat64Array(asynUser *pasynUser, epicsFloat
   pAxis = getAxis(pasynUser);
   if (!pAxis) return asynError;
 
-  getIntegerParam(profileNumReadbacks_, &numReadbacks);
+  getIntegerParam(paramSet->profileNumReadbacks_, &numReadbacks);
   *nRead = numReadbacks;
   if (*nRead > nElements) *nRead = nElements;
 
-  if (function == profileReadbacks_) {
+  if (function == paramSet->profileReadbacks_) {
     memcpy(value, pAxis->profileReadbacks_, *nRead*sizeof(double));
   }
-  else if (function == profileFollowingErrors_) {
+  else if (function == paramSet->profileFollowingErrors_) {
     memcpy(value, pAxis->profileFollowingErrors_, *nRead*sizeof(double));
   }
   else {
@@ -513,10 +443,10 @@ asynStatus asynMotorController::readGenericPointer(asynUser *pasynUser, void *po
   axis = pAxis->axisNo_;
 
   getAddress(pasynUser, &axis);
-  getIntegerParam(axis, motorStatus_, (int *)&pStatus->status);
-  getDoubleParam(axis, motorPosition_, &pStatus->position);
-  getDoubleParam(axis, motorEncoderPosition_, &pStatus->encoderPosition);
-  getDoubleParam(axis, motorVelocity_, &pStatus->velocity);
+  getIntegerParam(paramSet->motorStatus_, (int *)&pStatus->status);
+  getDoubleParam(paramSet->motorPosition_, &pStatus->position);
+  getDoubleParam(paramSet->motorEncoderPosition_, &pStatus->encoderPosition);
+  getDoubleParam(paramSet->motorVelocity_, &pStatus->velocity);
   asynPrint(pasynUser, ASYN_TRACE_FLOW,
     "%s:%s: MotorStatus = status%d, position=%f, encoder position=%f, velocity=%f\n",
     driverName, functionName, pStatus->status, pStatus->position, pStatus->encoderPosition, pStatus->velocity);
@@ -651,8 +581,8 @@ void asynMotorController::asynMotorPoller()
       pAxis=getAxis(i);
       if (!pAxis) continue;
 
-      getIntegerParam(i, motorPowerAutoOnOff_, &autoPower);
-      getDoubleParam(i, motorPowerOffDelay_, &autoPowerOffDelay);
+      getIntegerParam(i, paramSet->motorPowerAutoOnOff_, &autoPower);
+      getDoubleParam(i, paramSet->motorPowerOffDelay_, &autoPowerOffDelay);
 
       pAxis->poll(&moving);
       if (moving) {
@@ -826,9 +756,9 @@ asynStatus asynMotorController::buildProfile()
   int timeMode;
   int numPoints;
 
-  status |= getIntegerParam(profileTimeMode_, &timeMode);
-  status |= getDoubleParam(profileFixedTime_, &time);
-  status |= getIntegerParam(profileNumPoints_, &numPoints);
+  status |= getIntegerParam(paramSet->profileTimeMode_, &timeMode);
+  status |= getDoubleParam(paramSet->profileFixedTime_, &time);
+  status |= getIntegerParam(paramSet->profileNumPoints_, &numPoints);
   if (status) return asynError;
   if (timeMode == PROFILE_TIME_MODE_FIXED) {
     memset(profileTimes_, 0, maxProfilePoints_*sizeof(double));
