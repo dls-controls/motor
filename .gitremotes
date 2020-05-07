@@ -1,0 +1,2 @@
+gitlab ssh://git@gitlab.diamond.ac.uk/controls/support/motor.git
+upstream git@github.com:epics-modules/motor.git
